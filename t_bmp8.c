@@ -135,3 +135,10 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
 
     free(newData);
 }
+void bmp8_computeHistogram(t_bmp8* img, int histogram[256]) {
+    for (int i = 0; i < 256; i++)
+        histogram[i] = 0;
+    for (unsigned int i = 0; i < img->dataSize; i++)
+        histogram[img->data[i]]++;
+}
+

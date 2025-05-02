@@ -28,4 +28,7 @@ void bmp8_threshold(t_bmp8 *img, int threshold);
 // Image filtering
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize);
 
+// To Compute the histogram
+void bmp8_computeHistogram(t_bmp8* img, int histogram[256]);
+
 #endif
