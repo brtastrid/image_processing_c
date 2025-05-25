@@ -1,0 +1,6 @@
+# ninja log v6
+171	320	7699034163384463	bin/ImgFun.exe	a0ae9fb57fcad21d
+13	171	7699034161804126	CMakeFiles/ImgFun.dir/bmp24.c.obj	c7dd37588e6be461
+9	141	7699027975633738	CMakeFiles/ImgFun.dir/main.c.obj	5dc0d504dbcceacc
+5	139	7699034161726558	CMakeFiles/ImgFun.dir/bmp8.c.obj	9a63f4fba17ddbf6
+3	304	7699034472114309	build.ninja	fed5e1edea7d175d

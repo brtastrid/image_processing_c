@@ -1,0 +1,3 @@
+C:/Users/mtezz/CLionProjects/quotes-baert-ezzahraoui-1/cmake-build-debug/CMakeFiles/ImgFun.dir
+C:/Users/mtezz/CLionProjects/quotes-baert-ezzahraoui-1/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/mtezz/CLionProjects/quotes-baert-ezzahraoui-1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
