@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-
+// Compute the histogram of an 8-bit BMP image
 unsigned int *bmp8_computeHistogram(t_bmp8 *img) {
     unsigned int *hist = calloc(256, sizeof(unsigned int));
     if (!hist) {
-        printf("Memory allocation fail.\n");
+        printf("Memory allocation failed.\n");
         return NULL;
     }
 
@@ -18,10 +18,11 @@ unsigned int *bmp8_computeHistogram(t_bmp8 *img) {
     return hist;
 }
 
+// Compute the Cumulative Distribution Function (CDF) from a histogram
 unsigned int *bmp8_computeCDF(unsigned int *hist) {
     unsigned int *cdf = malloc(256 * sizeof(unsigned int));
     if (!cdf) {
-        printf("Memory allocation failed .\n");
+        printf("Memory allocation failed.\n");
         return NULL;
     }
 
@@ -33,11 +34,10 @@ unsigned int *bmp8_computeCDF(unsigned int *hist) {
     return cdf;
 }
 
-
+// Apply histogram equalization to an 8-bit BMP image
 void bmp8_equalize(t_bmp8 *img, unsigned int *cdf) {
     unsigned char map[256];
     unsigned int totalPixels = img->width * img->height;
-
 
     unsigned int cdf_min = 0;
     for (int i = 0; i < 256; i++) {
@@ -47,39 +47,33 @@ void bmp8_equalize(t_bmp8 *img, unsigned int *cdf) {
         }
     }
 
-
-    printf("\n CDF Preview \n");
+    printf("\nCDF Preview\n");
     for (int i = 0; i < 256; i += 32) {
         printf("cdf[%3d] = %u\n", i, cdf[i]);
     }
-
 
     for (int i = 0; i < 256; i++) {
         map[i] = (unsigned char) roundf(((float)(cdf[i] - cdf_min) / (totalPixels - cdf_min)) * 255.0f);
     }
 
-
-    printf("\n LUT Mapping\n");
+    printf("\nLUT Mapping\n");
     for (int i = 0; i < 256; i += 32) {
         printf("map[%3d] = %d\n", i, map[i]);
     }
 
-
-    printf("\n Sample pixel values\n");
+    printf("\nSample pixel values\n");
     for (int i = 0; i < 10; i++) {
         unsigned char old = img->data[i];
         unsigned char new = map[old];
         printf("Pixel[%d]: %d -> %d\n", i, old, new);
     }
 
-
     for (unsigned int i = 0; i < img->dataSize; i++) {
         img->data[i] = map[img->data[i]];
     }
 }
 
-
-
+// Load an 8-bit BMP image from a file
 t_bmp8 *bmp8_loadImage(const char *filename) {
     FILE *f = fopen(filename, "rb");
     if (!f) {
@@ -94,14 +88,12 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
         return NULL;
     }
 
-
     if (fread(img->header, sizeof(unsigned char), 54, f) != 54) {
-        printf("couldn't read bmp header \n");
+        printf("Couldn't read BMP header.\n");
         free(img);
         fclose(f);
         return NULL;
     }
-
 
     img->width       = *(unsigned int *)&img->header[18];
     img->height      = *(unsigned int *)&img->header[22];
@@ -109,38 +101,34 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
     img->dataSize    = *(unsigned int *)&img->header[34];
 
     if (img->colorDepth != 8) {
-        printf("only 8 bit greyscale images please.\n");
+        printf("Only 8-bit grayscale images are supported.\n");
         free(img);
         fclose(f);
         return NULL;
     }
-
 
     if (fread(img->colorTable, sizeof(unsigned char), 1024, f) != 1024) {
-        printf("color palette read error.\n");
+        printf("Color palette read error.\n");
         free(img);
         fclose(f);
         return NULL;
     }
-
 
     if (img->dataSize == 0) {
         int rowSize = ((img->width + 3) / 4) * 4;
         img->dataSize = rowSize * img->height;
     }
 
-
     img->data = malloc(img->dataSize);
     if (!img->data) {
-        printf("memory alloc fail.\n");
+        printf("Memory allocation failed.\n");
         free(img);
         fclose(f);
         return NULL;
     }
 
-
     if (fread(img->data, sizeof(unsigned char), img->dataSize, f) != img->dataSize) {
-        printf("pixel read fail.\n");
+        printf("Pixel read failed.\n");
         free(img->data);
         free(img);
         fclose(f);
@@ -151,31 +139,23 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
     return img;
 }
 
-
-
+// Save an 8-bit BMP image to a file
 void bmp8_saveImage(const char *filename, t_bmp8 *img) {
     FILE *f = fopen(filename, "wb");
     if (!f) {
-        printf("save error (no spaces in name) %s\n", filename);
+        printf("Save error (no spaces in name): %s\n", filename);
         return;
     }
 
-
     fwrite(img->header, sizeof(unsigned char), 54, f);
-
-
     fwrite(img->colorTable, sizeof(unsigned char), 1024, f);
-
-
     fwrite(img->data, sizeof(unsigned char), img->dataSize, f);
 
     printf("Image saved in %s\n", filename);
     fclose(f);
 }
 
-
-
-
+// Free memory allocated for an 8-bit BMP image
 void bmp8_free(t_bmp8 *img) {
     if (img) {
         free(img->data);
@@ -183,7 +163,7 @@ void bmp8_free(t_bmp8 *img) {
     }
 }
 
-
+// Print information about an 8-bit BMP image
 void bmp8_printInfo(const t_bmp8 *img) {
     printf("\nImage information:\n");
     printf("Width        : %u pixels\n", img->width);
@@ -192,15 +172,14 @@ void bmp8_printInfo(const t_bmp8 *img) {
     printf("Image Size   : %u bytes\n", img->dataSize);
 }
 
-
+// Apply a negative effect to an 8-bit BMP image
 void bmp8_negative(t_bmp8 *img) {
     for (unsigned int i = 0; i < img->dataSize; i++) {
-        // Inverts pixel intensity
         img->data[i] = 255 - img->data[i];
     }
 }
 
-
+// Adjust the brightness of an 8-bit BMP image
 void bmp8_brightness(t_bmp8 *img, int value) {
     for (unsigned int i = 0; i < img->dataSize; i++) {
         int temp = img->data[i] + value;
@@ -208,19 +187,19 @@ void bmp8_brightness(t_bmp8 *img, int value) {
     }
 }
 
-
+// Apply a threshold effect to an 8-bit BMP image
 void bmp8_threshold(t_bmp8 *img, int threshold) {
     for (unsigned int i = 0; i < img->dataSize; i++) {
         img->data[i] = (img->data[i] >= threshold) ? 255 : 0;
     }
 }
 
-
+// Apply a convolution filter to an 8-bit BMP image
 void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
     int n = kernelSize / 2;
     unsigned char *newData = malloc(img->dataSize);
     if (!newData) {
-        printf("Memory error.\n");
+        printf("Memory allocation failed.\n");
         return;
     }
 
@@ -242,14 +221,13 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
         }
     }
 
-
     for (unsigned int i = 0; i < img->dataSize; i++) {
         img->data[i] = newData[i];
     }
     free(newData);
 }
 
-
+// Apply a box blur filter to an 8-bit BMP image
 void bmp8_boxBlur(t_bmp8 *img) {
     float box[3][3] = {
         {1/9.f, 1/9.f, 1/9.f},
@@ -260,7 +238,7 @@ void bmp8_boxBlur(t_bmp8 *img) {
     bmp8_applyFilter(img, kernel, 3);
 }
 
-
+// Apply a Gaussian blur filter to an 8-bit BMP image
 void bmp8_gaussianBlur(t_bmp8 *img) {
     float gauss[3][3] = {
         {1/16.f, 2/16.f, 1/16.f},
@@ -271,7 +249,7 @@ void bmp8_gaussianBlur(t_bmp8 *img) {
     bmp8_applyFilter(img, kernel, 3);
 }
 
-
+// Apply an outline filter to an 8-bit BMP image
 void bmp8_outline(t_bmp8 *img) {
     float outline[3][3] = {
         {-1, -1, -1},
@@ -282,7 +260,7 @@ void bmp8_outline(t_bmp8 *img) {
     bmp8_applyFilter(img, kernel, 3);
 }
 
-
+// Apply an emboss filter to an 8-bit BMP image
 void bmp8_emboss(t_bmp8 *img) {
     float emboss[3][3] = {
         {-2, -1, 0},
@@ -293,7 +271,7 @@ void bmp8_emboss(t_bmp8 *img) {
     bmp8_applyFilter(img, kernel, 3);
 }
 
-
+// Apply a sharpen filter to an 8-bit BMP image
 void bmp8_sharpen(t_bmp8 *img) {
     float sharpen[3][3] = {
         { 0, -1,  0},
