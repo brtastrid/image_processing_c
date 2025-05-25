@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-
-// allocate a 2D pixel matrix
+// Allocate a 2D pixel matrix
 t_pixel **bmp24_allocateDataPixels(int width, int height) {
     t_pixel **pixels = malloc(height * sizeof(t_pixel *));
     if (!pixels) return NULL;
@@ -19,14 +18,13 @@ t_pixel **bmp24_allocateDataPixels(int width, int height) {
     return pixels;
 }
 
-// freeing memory
+// Free memory allocated for pixel data
 void bmp24_freeDataPixels(t_pixel **pixels, int height) {
     for (int i = 0; i < height; i++) free(pixels[i]);
     free(pixels);
 }
 
-
-// Freeing the entire BMP
+// Free the entire BMP image structure
 void bmp24_free(t_bmp24 *img) {
     if (img) {
         bmp24_freeDataPixels(img->data, img->height);
@@ -34,14 +32,13 @@ void bmp24_free(t_bmp24 *img) {
     }
 }
 
-// Load the bmp24 image
+// Load a BMP24 image from a file
 t_bmp24 *bmp24_loadImage(const char *filename) {
     FILE *f = fopen(filename, "rb");
     if (!f) {
-        printf("File doesn't exist%s\n", filename);
+        printf("File doesn't exist: %s\n", filename);
         return NULL;
     }
-
 
     uint16_t type;
     int32_t width, height;
@@ -49,7 +46,6 @@ t_bmp24 *bmp24_loadImage(const char *filename) {
     uint32_t compression, offset;
 
     fseek(f, 0, SEEK_SET);
-
     fread(&type, sizeof(uint16_t), 1, f);
 
     fseek(f, 18, SEEK_SET);
@@ -65,13 +61,11 @@ t_bmp24 *bmp24_loadImage(const char *filename) {
     fseek(f, 10, SEEK_SET);
     fread(&offset, sizeof(uint32_t), 1, f);
 
-
     if (type != 0x4D42 || bits != 24 || compression != 0) {
-        printf("Please uncompress your file .\n");
+        printf("Please uncompress your file.\n");
         fclose(f);
         return NULL;
     }
-
 
     t_bmp24 *img = malloc(sizeof(t_bmp24));
     img->width = width;
@@ -84,7 +78,6 @@ t_bmp24 *bmp24_loadImage(const char *filename) {
         return NULL;
     }
 
-
     fseek(f, offset, SEEK_SET);
     int padding = (4 - (width * 3) % 4) % 4;
 
@@ -96,36 +89,32 @@ t_bmp24 *bmp24_loadImage(const char *filename) {
             img->data[height - 1 - y][x].green = bgr[1];
             img->data[height - 1 - y][x].red = bgr[2];
         }
-
         fseek(f, padding, SEEK_CUR);
     }
 
     fclose(f);
-    printf("image loaded! %dx%d\n", width, height);
+    printf("Image loaded! %dx%d\n", width, height);
     return img;
 }
 
-
+// Save a BMP24 image to a file
 void bmp24_saveImage(t_bmp24 *img, const char *filename) {
     FILE *f = fopen(filename, "wb");
     if (!f) {
-        printf("error (no spaces please)  %s\n", filename);
+        printf("Error (no spaces please): %s\n", filename);
         return;
     }
-
 
     uint16_t type = 0x4D42;
     uint32_t offset = 54;
     uint32_t size = offset + (img->width * 3 + (4 - (img->width * 3 % 4)) % 4) * img->height;
     uint16_t reserved = 0;
 
-
     fwrite(&type, sizeof(uint16_t), 1, f);
     fwrite(&size, sizeof(uint32_t), 1, f);
     fwrite(&reserved, sizeof(uint16_t), 1, f);
     fwrite(&reserved, sizeof(uint16_t), 1, f);
     fwrite(&offset, sizeof(uint32_t), 1, f);
-
 
     uint32_t headerSize = 40;
     uint16_t planes = 1;
@@ -145,9 +134,7 @@ void bmp24_saveImage(t_bmp24 *img, const char *filename) {
     fwrite(&resolution, sizeof(int32_t), 1, f);
 
     fwrite(&compression, sizeof(uint32_t), 1, f);
-
     fwrite(&compression, sizeof(uint32_t), 1, f);
-
 
     int padding = (4 - (img->width * 3) % 4) % 4;
     unsigned char pad[3] = {0, 0, 0};
@@ -168,6 +155,7 @@ void bmp24_saveImage(t_bmp24 *img, const char *filename) {
     printf("Image saved in %s\n", filename);
 }
 
+// Apply a negative effect to the image
 void bmp24_negative(t_bmp24 *img) {
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -179,7 +167,7 @@ void bmp24_negative(t_bmp24 *img) {
     }
 }
 
-
+// Convert the image to grayscale
 void bmp24_grayscale(t_bmp24 *img) {
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -190,7 +178,7 @@ void bmp24_grayscale(t_bmp24 *img) {
     }
 }
 
-
+// Adjust the brightness of the image
 void bmp24_brightness(t_bmp24 *img, int value) {
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -202,7 +190,7 @@ void bmp24_brightness(t_bmp24 *img, int value) {
     }
 }
 
-
+// Apply convolution to a pixel
 t_pixel bmp24_convolution(t_bmp24 *img, int x, int y, float **kernel, int kernelSize) {
     int n = kernelSize / 2;
     float r = 0, g = 0, b = 0;
@@ -228,6 +216,7 @@ t_pixel bmp24_convolution(t_bmp24 *img, int x, int y, float **kernel, int kernel
     return result;
 }
 
+// Apply a filter to the image using a convolution kernel
 void bmp24_applyFilter(t_bmp24 *img, float **kernel, int kernelSize) {
     t_pixel **newData = bmp24_allocateDataPixels(img->width, img->height);
     if (!newData) return;
@@ -242,7 +231,7 @@ void bmp24_applyFilter(t_bmp24 *img, float **kernel, int kernelSize) {
     img->data = newData;
 }
 
-
+// Apply a box blur filter
 void bmp24_boxBlur(t_bmp24 *img) {
     float box[3][3] = {
         {1/9.f, 1/9.f, 1/9.f},
@@ -253,6 +242,7 @@ void bmp24_boxBlur(t_bmp24 *img) {
     bmp24_applyFilter(img, kernel, 3);
 }
 
+// Apply a Gaussian blur filter
 void bmp24_gaussianBlur(t_bmp24 *img) {
     float gauss[3][3] = {
         {1/16.f, 2/16.f, 1/16.f},
@@ -263,6 +253,7 @@ void bmp24_gaussianBlur(t_bmp24 *img) {
     bmp24_applyFilter(img, kernel, 3);
 }
 
+// Apply an outline filter
 void bmp24_outline(t_bmp24 *img) {
     float outline[3][3] = {
         {-1, -1, -1},
@@ -273,6 +264,7 @@ void bmp24_outline(t_bmp24 *img) {
     bmp24_applyFilter(img, kernel, 3);
 }
 
+// Apply an emboss filter
 void bmp24_emboss(t_bmp24 *img) {
     float emboss[3][3] = {
         {-2, -1, 0},
@@ -283,6 +275,7 @@ void bmp24_emboss(t_bmp24 *img) {
     bmp24_applyFilter(img, kernel, 3);
 }
 
+// Apply a sharpen filter
 void bmp24_sharpen(t_bmp24 *img) {
     float sharpen[3][3] = {
         { 0, -1,  0},
@@ -293,9 +286,9 @@ void bmp24_sharpen(t_bmp24 *img) {
     bmp24_applyFilter(img, kernel, 3);
 }
 
-
+// Compute the histogram for the red channel
 unsigned int *bmp24_computeHistogramR(const t_bmp24 *img) {
-    unsigned int *hist=calloc(256, sizeof(unsigned int));
+    unsigned int *hist = calloc(256, sizeof(unsigned int));
     if (!hist) return 0;
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -306,9 +299,9 @@ unsigned int *bmp24_computeHistogramR(const t_bmp24 *img) {
     return hist;
 }
 
-
+// Compute the histogram for the green channel
 unsigned int *bmp24_computeHistogramG(const t_bmp24 *img) {
-    unsigned int *hist=calloc(256, sizeof(unsigned int));
+    unsigned int *hist = calloc(256, sizeof(unsigned int));
     if (!hist) return 0;
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -319,10 +312,9 @@ unsigned int *bmp24_computeHistogramG(const t_bmp24 *img) {
     return hist;
 }
 
-
-
+// Compute the histogram for the blue channel
 unsigned int *bmp24_computeHistogramB(const t_bmp24 *img) {
-    unsigned int *hist=calloc(256, sizeof(unsigned int));
+    unsigned int *hist = calloc(256, sizeof(unsigned int));
     if (!hist) return 0;
     for (int y = 0; y < img->height; y++) {
         for (int x = 0; x < img->width; x++) {
@@ -333,6 +325,7 @@ unsigned int *bmp24_computeHistogramB(const t_bmp24 *img) {
     return hist;
 }
 
+// Compute the lookup table for histogram equalization
 void computeEqualizationLUT(unsigned int *hist, int total, uint8_t *lut) {
     unsigned int cdf[256] = {0};
     cdf[0] = hist[0];
@@ -356,11 +349,11 @@ void computeEqualizationLUT(unsigned int *hist, int total, uint8_t *lut) {
     }
 }
 
+// Apply histogram equalization to the image
 void bmp24_equalize(t_bmp24 *img) {
     int width = img->width;
     int height = img->height;
     int size = width * height;
-
 
     float *Y = malloc(size * sizeof(float));
     float *U = malloc(size * sizeof(float));
@@ -371,7 +364,6 @@ void bmp24_equalize(t_bmp24 *img) {
         free(Y); free(U); free(V);
         return;
     }
-
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -388,13 +380,11 @@ void bmp24_equalize(t_bmp24 *img) {
         }
     }
 
-
     unsigned int hist[256] = {0};
     for (int i = 0; i < size; i++) {
         int y_val = (int)fminf(fmaxf(roundf(Y[i]), 0), 255);
         hist[y_val]++;
     }
-
 
     unsigned int cdf[256] = {0};
     cdf[0] = hist[0];
@@ -402,12 +392,10 @@ void bmp24_equalize(t_bmp24 *img) {
         cdf[i] = cdf[i - 1] + hist[i];
     }
 
-
     uint8_t map[256];
     for (int i = 0; i < 256; i++) {
         map[i] = (uint8_t)roundf(((float)(cdf[i] - cdf[0]) / (size - cdf[0])) * 255.0f);
     }
-
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -427,8 +415,6 @@ void bmp24_equalize(t_bmp24 *img) {
         }
     }
 
-
     free(Y); free(U); free(V);
     printf("Histogram Equalization applied.\n");
 }
-
